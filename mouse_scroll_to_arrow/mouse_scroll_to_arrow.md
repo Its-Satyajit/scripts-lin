@@ -1,3 +1,5 @@
+
+
 # Map Mouse Wheel Scroll to Arrow Keys in Terminal
 
 This script allows you to map **mouse wheel scroll** actions to **Arrow Up** and **Arrow Down** keys in your terminal, enhancing productivity by enabling smooth navigation through terminal history and outputs using the mouse.
@@ -5,7 +7,7 @@ This script allows you to map **mouse wheel scroll** actions to **Arrow Up** and
 ## Key Features
 - **Map mouse wheel scroll** to **Arrow Up** and **Arrow Down** keys.
 - **Easy terminal navigation** for scrolling command history or outputs.
-- Compatible with **most Linux distributions** including **Debian-based (Ubuntu, Mint, etc.)**, **Red Hat-based (Fedora, CentOS, etc.)**, and **openSUSE**.
+- Compatible with **most Linux distributions**, including **Debian-based (Ubuntu, Mint, etc.)**, **Red Hat-based (Fedora, CentOS, etc.)**, **openSUSE**, and **Arch-based (Arch, Manjaro, etc.)**.
 
 ## Installation Guide for Most Linux Distributions
 
@@ -33,6 +35,28 @@ Use the following command:
 
 ```bash
 sudo zypper install xdotool x11-utils
+```
+
+#### For Arch Linux/Manjaro-based Distributions:
+You can install the required packages using **pacman** or, alternatively, from the **AUR** (Arch User Repository).
+
+##### Using **pacman** (default package manager for Arch Linux):
+
+```bash
+sudo pacman -S xdotool xorg-xev
+```
+
+##### Using **AUR** (if you prefer or need the AUR version):
+You can install **`xdotool`** and **`xev`** from the AUR with an AUR helper like **yay**. If you don’t have **yay** installed, you can install it first by running:
+
+```bash
+sudo pacman -S yay
+```
+
+Once you have **yay**, you can install the packages from the AUR:
+
+```bash
+yay -S xdotool xorg-xev
 ```
 
 ### Step 2: Create the Script
@@ -122,7 +146,7 @@ The script will now start automatically when you open a new terminal session.
 
 ## Conclusion
 
-By following this guide, you will map your **mouse scroll wheel** to simulate **Arrow Up** and **Arrow Down** keys in the terminal, making it easier to navigate through command history and terminal output. This simple script enhances terminal workflow on **most Linux distributions**, including **Debian-based**, **Red Hat-based**, and **openSUSE**.
+By following this guide, you will map your **mouse scroll wheel** to simulate **Arrow Up** and **Arrow Down** keys in the terminal, making it easier to navigate through command history and terminal output. This simple script enhances terminal workflow on **most Linux distributions**, including **Debian-based**, **Red Hat-based**, **openSUSE**, and **Arch-based** systems.
 
 ---
 
