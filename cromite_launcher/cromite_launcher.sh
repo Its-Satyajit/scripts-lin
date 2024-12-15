@@ -13,7 +13,7 @@ update_cromite() {
     latest_release_info=$(curl -s $GITHUB_API_URL)
 
     # Extract the URL of the latest tarball (chrome-lin64.tar.gz) from the JSON response
-    LATEST_TAR_URL=$(echo $latest_release_info | jq -r '.assets[] | select(.name=="chrome-lin64.tar.gz") | .browser_download_url')
+    LATEST_TAR_URL=$(echo "$latest_release_info" | jq -r '.assets[] | select(.name=="chrome-lin64.tar.gz") | .browser_download_url')
 
     if [ -z "$LATEST_TAR_URL" ]; then
         echo "Failed to fetch the latest release URL. Continuing with the current version..."
