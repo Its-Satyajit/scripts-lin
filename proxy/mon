@@ -1,0 +1,13 @@
+#!/bin/sh
+
+while true; do
+    if ! pgrep -f "ssh -D 1337" > /dev/null; then
+        ssh -D 1337 -C -N user@remote-host &
+    fi
+
+    if ! pgrep -f "redsocks" > /dev/null; then
+        sudo systemctl start redsocks
+    fi
+
+    sleep 60
+done
