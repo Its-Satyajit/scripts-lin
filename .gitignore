@@ -1,0 +1,7 @@
+/install_rpm/install_log.txt
+/install_rpm/installed_packages.txt
+temp_downloads
+/update 3rd party rpm/3rdpartyrpms.text
+/update 3rd party rpm/update_log.txt
+/update 3rd party rpm/update.log
+/update 3rd party rpm/valid_packages.txt

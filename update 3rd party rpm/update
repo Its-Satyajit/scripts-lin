@@ -1,0 +1,135 @@
+#!/bin/bash
+
+set -euo pipefail
+
+LOGFILE="update.log"
+VALID_PACKAGES_FILE="valid_packages.txt"
+TEMP_DIR="./temp_downloads"  # Temporary directory for downloaded files
+
+# Create temp download directory if it doesn't exist
+mkdir -p "$TEMP_DIR"
+
+log_info() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO: $1" | tee -a "$LOGFILE"
+}
+
+log_error() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ERROR: $1" | tee -a "$LOGFILE" >&2
+}
+
+cleanup() {
+    log_info "Cleaning up temporary files..."
+    rm -rf "$TEMP_DIR/*"
+}
+
+# Set a trap to ensure cleanup happens on script exit
+trap cleanup EXIT
+
+fetch_latest_release_info() {
+    local repo="$1"
+    log_info "Fetching latest release info from https://api.github.com/repos/$repo/releases/latest"
+    curl -s "https://api.github.com/repos/$repo/releases/latest" | jq -r '.tag_name, .assets[] | .name + " " + .browser_download_url'
+}
+
+install_package() {
+    local package_path="$1"
+    local package_name="${package_path##*/}"
+
+    log_info "Installing $package_name..."
+    if sudo rpm -Uvh "$package_path"; then
+        log_info "Installation of $package_name completed successfully."
+    else
+        log_error "Installation of $package_name failed or is already installed."
+    fi
+}
+
+select_valid_asset() {
+    local assets=("$@")
+    local valid_asset=""
+
+    for asset in "${assets[@]}"; do
+        local asset_name=$(echo "$asset" | awk '{print $1}')
+        if [[ "$asset_name" == *".rpm" ]]; then
+            valid_asset="$asset"
+            log_info "Valid RPM asset found: $valid_asset"
+            break
+        fi
+    done
+
+    echo "$valid_asset"
+}
+
+update_package() {
+    local repo="$1"
+    local latest_release_info
+    latest_release_info=$(fetch_latest_release_info "$repo")
+
+    local latest_release_version=$(echo "$latest_release_info" | head -n 1)
+    log_info "Latest release: $latest_release_version"
+
+    # Collect all asset information
+    readarray -t assets < <(echo "$latest_release_info" | tail -n +2)
+
+    if [[ ${#assets[@]} -eq 0 ]]; then
+        log_error "No assets found for $repo"
+        return 1
+    fi
+
+    local valid_asset=$(select_valid_asset "${assets[@]}")
+
+    if [[ -z "$valid_asset" ]]; then
+        log_error "No valid RPM found for $repo"
+        return 1
+    fi
+
+    echo "$repo:$valid_asset" >> "$VALID_PACKAGES_FILE"
+
+    local asset_url=$(echo "$valid_asset" | awk '{print $2}')
+    local package_name="${valid_asset%% *}"
+    local package_path="$TEMP_DIR/$package_name"
+
+    log_info "Downloading $package_name from $asset_url"
+    curl -L -o "$package_path" "$asset_url"
+
+    install_package "$package_path"
+}
+
+update_all() {
+    log_info "Updating all packages..."
+
+    if [[ ! -f "$VALID_PACKAGES_FILE" ]]; then
+        log_error "$VALID_PACKAGES_FILE not found. No packages to update."
+        return 1
+    fi
+
+    while IFS= read -r line; do
+        local repo=$(echo "$line" | awk -F: '{print $1}')
+        local package=$(echo "$line" | awk -F: '{print $2}')
+
+        log_info "Processing $repo..."
+        install_package "$package"
+    done < "$VALID_PACKAGES_FILE"
+}
+
+# Main script logic
+if [[ $# -lt 1 ]]; then
+    log_error "No arguments provided. Usage: $0 {update|all} [repo]"
+    exit 1
+fi
+
+case "$1" in
+    update)
+        if [[ $# -ne 2 ]]; then
+            log_error "Repository not specified. Usage: $0 update [repo]"
+            exit 1
+        fi
+        update_package "$2"
+        ;;
+    all)
+        update_all
+        ;;
+    *)
+        log_error "Invalid option: $1. Usage: $0 {update|all} [repo]"
+        exit 1
+        ;;
+esac
